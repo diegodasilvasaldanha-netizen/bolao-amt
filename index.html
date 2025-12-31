@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bolão — 184 jogos (multi-destaque)</title>
+
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#121925;
+      --muted:#93a4b8;
+      --text:#e9f0f8;
+      --border:#223046;
+
+      --hl:#ffd54a;       /* amarelo: números */
+      --hlText:#1a1400;
+
+      --green:#2ee59d;    /* verde: jogo */
+      --greenBg: rgba(46,229,157,.14);
+      --greenOutline: rgba(46,229,157,.75);
+
+      --btn:#182235;
+      --btnHover:#22314c;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--bg),#070a0f);
+      color:var(--text);
+    }
+    header{
+      padding:20px 16px 10px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    h1{margin:0 0 6px;font-size:20px}
+    p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding:12px 16px 28px;
+      display:grid;
+      grid-template-columns:360px 1fr;
+      gap:14px;
+    }
+    .card{
+      background:rgba(18,25,37,.92);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .card h2{
+      margin:0;
+      padding:14px;
+      font-size:14px;
+      border-bottom:1px solid var(--border);
+    }
+    .card .content{padding:14px}
+
+    /* ---------- seletor 1–60 ---------- */
+    .controls{margin-bottom:12px}
+    button.small{
+      background:var(--btn);
+      border:1px solid var(--border);
+      color:var(--text);
+      border-radius:10px;
+      padding:10px 12px;
+      cursor:pointer;
+    }
+    button.small:hover{background:var(--btnHover)}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:8px;
+    }
+    .num{
+      user-select:none;
+      text-align:center;
+      padding:10px 0;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#0e1420;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      outline:none;
+    }
+    .num:hover{background:#121b2b}
+    .num.selected{
+      background:var(--hl);
+      border-color:rgba(255,213,74,.7);
+      color:var(--hlText);
+    }
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    /* ---------- tabela ---------- */
+    .tableWrap{overflow:auto}
+    table{
+      width:100%;
+      min-width:620px;
+      border-collapse:separate;
+      border-spacing:0;
+      table-layout:fixed;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:#0e1420;
+      z-index:1;
+      border-bottom:1px solid var(--border);
+      padding:10px 8px;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    tbody td{
+      border-bottom:1px solid rgba(34,48,70,.55);
+      padding:10px 8px;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    th.gameCol, td.game{
+      width:72px;
+      text-align:center;
+      font-weight:800;
+      color:#cfe3ff;
+      border-right:1px solid rgba(34,48,70,.35);
+      border-radius:10px;
+    }
+    th.pickCol, td.pick{
+      width:56px;
+      text-align:center;
+      border-left:1px solid rgba(34,48,70,.35);
+      border-radius:8px;
+      font-variant-numeric:tabular-nums;
+    }
+
+    /* amarelo: células com números selecionados */
+    td.pick.hl{
+      background:rgba(255,213,74,.18);
+      outline:2px solid rgba(255,213,74,.55);
+      outline-offset:-2px;
+      font-weight:800;
+      color:#fff3c0;
+    }
+
+    /* verde: número do jogo quando bater 4/5/6 */
+    td.game.good{
+      background: var(--greenBg);
+      outline:2px solid var(--greenOutline);
+      outline-offset:-2px;
+      color: var(--green);
+      box-shadow:0 0 0 1px rgba(46,229,157,.18) inset;
+    }
+
+    @media (max-width:980px){
+      main{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Bolão — 184 jogos</h1>
+  <p>
+    Clique nos números (1 a 60) para incluir/remover do destaque.
+    O <b>número do jogo</b> fica <b style="color:#2ee59d">verde</b> quando <b>4, 5 ou 6</b> números do jogo estiverem selecionados.
+  </p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Números (1 a 60)</h2>
+    <div class="content">
+      <div class="controls">
+        <button class="small" id="clearBtn" type="button">Limpar seleção</button>
+      </div>
+
+      <div class="grid" id="numGrid" aria-label="Lista de números de 1 a 60"></div>
+      <div class="hint" id="status">Nenhum número selecionado.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Jogos</h2>
+    <div class="content tableWrap">
+      <table id="gamesTable">
+        <thead>
+          <tr>
+            <th class="gameCol">Jogo</th>
+            <th class="pickCol">D1</th>
+            <th class="pickCol">D2</th>
+            <th class="pickCol">D3</th>
+            <th class="pickCol">D4</th>
+            <th class="pickCol">D5</th>
+            <th class="pickCol">D6</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  // 184 jogos (Jogo, D1..D6)
+  const rows = [[1,4,7,16,21,26,34],[2,1,17,19,20,21,50],[3,1,5,7,31,42,50],[4,21,28,29,33,51,59],[5,11,26,28,30,51,55],[6,3,19,34,37,44,53],[7,26,29,32,55,58,59],[8,5,41,42,45,51,60],[9,4,14,16,29,45,59],[10,17,23,43,45,48,51],[11,3,11,32,43,44,56],[12,2,12,18,32,49,55],[13,15,25,36,51,53,56],[14,11,14,23,24,27,39],[15,14,27,33,36,49,55],[16,11,15,28,31,38,58],[17,1,12,16,31,35,46],[18,1,2,11,44,53,60],[19,3,9,21,26,46,54],[20,24,29,41,50,52,54],[21,5,10,18,27,33,47],[22,2,13,41,45,48,54],[23,13,30,33,36,51,54],[24,31,36,38,41,44,56],[25,5,23,32,34,54,56],[26,4,5,12,15,32,54],[27,4,7,10,20,27,40],[28,8,14,19,37,47,57],[29,19,24,25,48,52,58],[30,8,9,42,43,45,48],[31,3,37,47,48,50,57],[32,9,10,22,41,47,60],[33,7,16,26,37,49,53],[34,9,28,33,39,44,47],[35,21,42,48,53,54,59],[36,9,18,31,40,45,49],[37,5,10,14,28,31,32],[38,4,12,26,33,58,60],[39,4,12,21,34,47,48],[40,6,10,18,22,43,45],[41,3,20,28,39,57,60],[42,16,17,20,29,39,42],[43,8,18,29,30,32,55],[44,7,10,16,48,53,54],[45,13,14,22,41,53,60],[46,8,18,29,30,32,55],[47,7,10,16,48,53,54],[48,13,14,22,41,53,60],[49,12,13,15,23,28,33],[50,4,5,14,36,53,56],[51,10,13,20,31,36,59],[52,2,5,13,17,36,44],[53,12,14,19,22,43,57],[54,10,11,14,15,27,50],[55,21,22,32,34,43,54],[56,13,15,39,56,57,60],[57,13,25,26,28,32,47],[58,7,19,25,27,28,54],[59,26,28,32,41,44,46],[60,8,22,41,42,44,59],[61,2,3,10,17,34,52],[62,6,8,10,20,25,42],[63,12,13,16,33,42,50],[64,8,11,22,32,53,59],[65,12,14,31,39,45,55],[66,4,14,16,25,35,59],[67,1,15,21,24,30,55],[68,11,13,23,31,50,58],[69,1,4,8,10,44,45],[70,5,21,27,28,41,50],[71,4,10,14,15,35,52],[72,5,21,26,35,38,55],[73,1,8,10,16,23,47],[74,2,3,12,21,41,52],[75,11,15,19,22,42,58],[76,14,18,21,34,36,42],[77,1,2,5,14,29,45],[78,2,3,25,32,46,55],[79,13,18,25,28,30,41],[80,1,2,4,16,32,45],[81,7,10,14,21,29,32],[82,3,5,12,13,36,41],[83,8,11,14,15,34,48],[84,10,14,16,25,41,50],[85,13,23,25,31,52,59],[86,4,5,14,25,39,42],[87,12,16,20,24,42,55],[88,3,10,13,15,25,58],[89,2,5,10,14,15,58],[90,8,13,14,16,41,50],[91,4,12,14,15,35,50],[92,2,10,13,21,34,59],[93,7,11,12,13,41,60],[94,1,5,19,32,34,55],[95,4,5,10,15,22,55],[96,3,10,18,22,42,45],[97,2,5,14,15,21,59],[98,7,12,14,35,50,59],[99,1,3,5,32,34,58],[100,4,10,14,25,39,60],[101,5,12,14,20,30,52],[102,2,3,6,10,17,52],[103,1,2,4,5,12,45],[104,3,6,10,20,22,42],[105,1,2,5,10,14,29],[106,4,10,12,15,21,59],[107,3,5,10,12,18,42],[108,7,10,14,21,29,35],[109,2,5,10,14,21,59],[110,1,3,5,12,32,58],[111,7,12,14,35,50,59],[112,4,10,14,25,39,60],[113,5,12,14,20,30,52],[114,2,3,6,10,17,52],[115,1,2,4,5,12,45],[116,3,6,10,20,22,42],[117,1,2,5,10,14,29],[118,4,10,12,15,21,59],[119,3,5,10,12,18,42],[120,7,10,14,21,29,35],[121,6,8,10,20,25,42],[122,2,3,10,17,34,52],[123,12,13,16,33,42,50],[124,8,11,22,32,53,59],[125,12,14,31,39,45,55],[126,4,14,16,25,35,59],[127,1,15,21,24,30,55],[128,11,13,23,31,50,58],[129,1,4,8,10,44,45],[130,5,21,27,28,41,50],[131,4,10,14,15,35,52],[132,5,21,26,35,38,55],[133,1,8,10,16,23,47],[134,2,3,12,21,41,52],[135,11,15,19,22,42,58],[136,14,18,21,34,36,42],[137,1,2,5,14,29,45],[138,2,3,25,32,46,55],[139,13,18,25,28,30,41],[140,1,2,4,16,32,45],[141,7,10,14,21,29,32],[142,3,5,12,13,36,41],[143,8,11,14,15,34,48],[144,10,14,16,25,41,50],[145,13,23,25,31,52,59],[146,4,5,14,25,39,42],[147,15,17,18,25,28,52],[148,3,7,8,10,30,58],[149,25,30,47,49,59,60],[150,8,27,38,49,54,60],[151,10,12,13,19,22,46],[152,3,8,10,14,34,37],[153,20,26,30,42,43,60],[154,10,17,24,48,55,57],[155,7,11,13,23,42,45],[156,9,18,30,49,51,53],[157,26,32,34,37,42,60],[158,13,36,46,48,52,55],[159,8,14,15,19,52,58],[160,9,12,15,16,24,48],[161,12,20,29,49,52,60],[162,2,6,15,28,29,59],[163,3,5,31,41,44,56],[164,3,4,17,23,46,59],[165,4,5,12,18,42,57],[166,3,17,21,28,29,49],[167,6,10,11,15,34,53],[168,3,11,14,26,35,50],[169,2,3,33,35,45,60],[170,14,30,32,33,41,60],[171,2,6,15,28,29,59],[172,3,5,31,41,44,56],[173,3,4,17,23,46,59],[174,4,5,12,18,42,57],[175,3,17,21,28,29,49],[176,6,10,11,15,34,53],[177,3,11,14,26,35,50],[178,2,3,33,35,45,60],[179,16,21,27,32,33,53],[180,6,7,25,27,32,53],[181,4,12,15,25,48,49],[182,28,31,33,48,54,56],[183,1,4,11,13,20,51],[184,5,12,24,30,33,52]];
+
+  const selected = new Set();
+  const grid = document.getElementById("numGrid");
+  const tbody = document.querySelector("#gamesTable tbody");
+  const status = document.getElementById("status");
+  const clearBtn = document.getElementById("clearBtn");
+
+  function renderGrid(){
+    grid.innerHTML = "";
+    for(let n=1;n<=60;n++){
+      const el=document.createElement("div");
+      el.className="num";
+      el.textContent=String(n);
+      el.tabIndex = 0;
+      el.setAttribute("aria-pressed","false");
+
+      const onToggle = () => toggle(String(n));
+      el.addEventListener("click", onToggle);
+      el.addEventListener("keydown",(e)=>{
+        if(e.key==="Enter" || e.key===" "){
+          e.preventDefault();
+          onToggle();
+        }
+      });
+
+      grid.appendChild(el);
+    }
+  }
+
+  function renderTable(){
+    tbody.innerHTML = "";
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+
+      const gameTd = document.createElement("td");
+      gameTd.className = "game";
+      gameTd.textContent = String(r[0]);
+      tr.appendChild(gameTd);
+
+      for(let i=1;i<=6;i++){
+        const td=document.createElement("td");
+        td.className="pick";
+        td.dataset.v=String(r[i]);
+        td.textContent=String(r[i]);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function toggle(v){
+    if(selected.has(v)) selected.delete(v);
+    else selected.add(v);
+    update();
+  }
+
+  function update(){
+    // atualiza visual do grid
+    grid.querySelectorAll(".num").forEach(el=>{
+      const on = selected.has(el.textContent);
+      el.classList.toggle("selected", on);
+      el.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+
+    let highlightedCells = 0;
+    let goodGames = 0;
+
+    tbody.querySelectorAll("tr").forEach(tr=>{
+      const gameTd = tr.querySelector("td.game");
+      const picks = Array.from(tr.querySelectorAll("td.pick"));
+
+      // conta quantos dos 6 estão selecionados
+      let hit = 0;
+      for(const td of picks){
+        const on = selected.has(td.dataset.v);
+        td.classList.toggle("hl", on);
+        if(on){
+          highlightedCells++;
+          hit++;
+        }
+      }
+
+      // NOVO: destaca o "Jogo" se 4, 5 ou 6 números baterem
+      const isGood = (hit >= 4);
+      gameTd.classList.toggle("good", isGood && selected.size > 0);
+      if(isGood && selected.size > 0) goodGames++;
+    });
+
+    if(selected.size === 0){
+      status.textContent = "Nenhum número selecionado.";
+    } else {
+      const list = Array.from(selected).map(Number).sort((a,b)=>a-b).join(", ");
+      status.textContent = `Selecionados: ${list} • células destacadas: ${highlightedCells} • jogos com 4+ acertos: ${goodGames}`;
+    }
+  }
+
+  clearBtn.addEventListener("click",()=>{
+    selected.clear();
+    update();
+  });
+
+  renderGrid();
+  renderTable();
+  update();
+</script>
+</body>
+</html>
